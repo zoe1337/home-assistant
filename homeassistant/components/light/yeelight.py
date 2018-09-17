@@ -193,7 +193,25 @@ class YeelightLight(Light):
         self._color_temp = None
         self._is_on = None
         self._hs = None
-
+        self._night_light = None
+        self._requested_properties = [
+            "power",
+            "bright",
+            "ct",
+            "rgb",
+            "hue",
+            "sat",
+            "color_mode",
+            "flowing",
+            "delayoff",
+            "music_on",
+            "nl_br",
+            "active_mode",
+            "bg_power",
+            "bg_rgb",
+            "name",
+            ]
+ 
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
@@ -228,6 +246,11 @@ class YeelightLight(Light):
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
         return self._brightness
+
+    @property
+    def night_light(self) -> int:
+        """Returns True if the lamp is in night mode, otherwise False."""
+        return self._night_light
 
     @property
     def min_mireds(self):
@@ -280,7 +303,7 @@ class YeelightLight(Light):
         if self._bulb_device is None:
             try:
                 self._bulb_device = yeelight.Bulb(self._ipaddr)
-                self._bulb_device.get_properties()  # force init for type
+                self._bulb_device.get_properties(self._requested_properties)  # force init for type
 
                 self._available = True
             except yeelight.BulbException as ex:
@@ -301,15 +324,19 @@ class YeelightLight(Light):
         """Update properties from the bulb."""
         import yeelight
         try:
-            self._bulb.get_properties()
+            self._bulb.get_properties(self._requested_properties)
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
 
             self._is_on = self._properties.get('power') == 'on'
 
+            self._night_light = False
             bright = self._properties.get('bright', None)
             if bright:
+                if self._properties.get('active_mode') == '1':
+                    self._night_light = True
+                    bright = self._properties.get('nl_br')
                 self._brightness = round(255 * (int(bright) / 100))
 
             temp_in_k = self._properties.get('ct', None)
