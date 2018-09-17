@@ -252,7 +252,11 @@ class YeelightLight(Light):
         """Returns True if the lamp is in night mode, otherwise False."""
         return self._night_light
 
+<<<<<<< HEAD
     @property
+=======
+   @property
+>>>>>>> f710085e9606ad6306f83a31a9dd9bad322cffee
     def min_mireds(self):
         """Return minimum supported color temperature."""
         if self.supported_features & SUPPORT_COLOR_TEMP:
